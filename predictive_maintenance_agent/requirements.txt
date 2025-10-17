@@ -1,0 +1,6 @@
+paho-mqtt
+jsonschema
+scikit-learn
+joblib
+pandas # pandas is used in the model training script, but also good practice to include if model expects Series/DataFrame
+json-logging

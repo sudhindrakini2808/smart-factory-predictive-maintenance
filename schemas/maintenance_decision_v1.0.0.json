@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Maintenance Decision",
+    "description": "Schema for a maintenance decision from an AI agent.",
+    "type": "object",
+    "properties": {
+      "decision_id": { "type": "string", "description": "Unique ID for this decision instance" },
+      "timestamp": { "type": "string", "format": "date-time", "description": "Time of decision generation" },
+      "source_agent_id": { "type": "string", "description": "ID of the AI agent making the decision" },
+      "decision_type": { "type": "string", "enum": ["maintenance_decision"], "description": "Type of decision being made" },
+      "schema_version": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$", "description": "Semantic version of the decision schema" },
+      "payload": {
+        "type": "object",
+        "properties": {
+          "machine_id": { "type": "string" },
+          "needs_maintenance": { "type": "boolean", "description": "True if maintenance is recommended, false otherwise" },
+          "prediction_confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence score of the prediction" },
+          "predicted_features": {
+            "type": "object",
+            "properties": {
+              "avg_temperature_c_5min": { "type": "number" },
+              "max_vibration_g_1min": { "type": "number" },
+              "power_consumption_avg_10min": { "type": "number" }
+            },
+            "required": ["avg_temperature_c_5min", "max_vibration_g_1min", "power_consumption_avg_10min"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["machine_id", "needs_maintenance", "prediction_confidence", "predicted_features"],
+        "additionalProperties": false
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "priority": { "type": "string", "enum": ["low", "normal", "high"] },
+          "ttl_seconds": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["priority", "ttl_seconds"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["decision_id", "timestamp", "source_agent_id", "decision_type", "schema_version", "payload", "metadata"],
+    "additionalProperties": false
+  }

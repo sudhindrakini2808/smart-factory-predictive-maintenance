@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  mqtt_broker:
+    image: eclipse-mosquitto:2.0.15 # Using a specific version for stability
+    container_name: mosquitto_broker
+    ports:
+      - "1883:1883" # Standard MQTT port
+      - "9001:9001" # MQTT over WebSockets port (optional)
+    volumes:
+      # Mount our custom config file
+      - ./mqtt_broker/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      # Persistent volumes for data and logs
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: unless-stopped # Always restart if it crashes or Docker restarts
+
+  data_generator:
+    build:
+      context: .
+      dockerfile: ./data_generator/Dockerfile
+    container_name: data_generator
+    depends_on:
+      - mqtt_broker # Ensure broker is up before generator starts
+    restart: unless-stopped
+    logging: # Optional: Limit log output for this service if it's too verbose
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  context_processor:
+    build:
+      context: .
+      dockerfile: ./context_processor/Dockerfile
+    container_name: context_processor
+    depends_on:
+      - mqtt_broker
+      - data_generator # Ensure data generator is running to produce raw data
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  predictive_maintenance_agent:
+    build: 
+      context: .
+      dockerfile: ./predictive_maintenance_agent/Dockerfile
+    container_name: predictive_maintenance_agent
+    depends_on:
+      - mqtt_broker
+      - context_processor # Depends on context processor to get processed data
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  action_executor:
+    build:
+      context: . # Set build context to the project root
+      dockerfile: ./action_executor/Dockerfile # Specify the Dockerfile location
+    container_name: action_executor
+    depends_on:
+      - mqtt_broker
+      - predictive_maintenance_agent
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  performance_monitor:
+    build:
+      context: . # Set build context to the project root
+      dockerfile: ./performance_monitor/Dockerfile # Specify the Dockerfile location
+    container_name: performance_monitor
+    depends_on:
+      - mqtt_broker
+      - action_executor
+      - context_processor
+      - predictive_maintenance_agent
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  mosquitto_data: # Docker managed volume for Mosquitto persistence
+  mosquitto_log:  # Docker managed volume for Mosquitto logs

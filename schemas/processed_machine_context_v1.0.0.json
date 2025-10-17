@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Processed Machine Context",
+    "description": "Schema for processed machine context, ready for AI agents.",
+    "type": "object",
+    "properties": {
+      "context_id": { "type": "string", "description": "Unique ID for this context instance" },
+      "timestamp": { "type": "string", "format": "date-time", "description": "Time of context generation" },
+      "source_agent_id": { "type": "string", "description": "ID of the agent generating this context" },
+      "context_type": { "type": "string", "enum": ["machine_status_context"], "description": "Type of context being shared" },
+      "schema_version": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$", "description": "Semantic version of the context schema" },
+      "payload": {
+        "type": "object",
+        "properties": {
+          "machine_id": { "type": "string" },
+          "current_status": { "type": "string", "enum": ["running", "idle", "error"] },
+          "avg_temperature_c_5min": { "type": "number", "description": "5-minute average temperature" },
+          "max_vibration_g_1min": { "type": "number", "description": "1-minute maximum vibration" },
+          "power_consumption_avg_10min": { "type": "number", "description": "10-minute average power consumption" },
+          "is_anomaly_detected": { "type": "boolean", "description": "Simple anomaly flag based on thresholds" }
+        },
+        "required": ["machine_id", "current_status", "avg_temperature_c_5min", "max_vibration_g_1min", "power_consumption_avg_10min", "is_anomaly_detected"],
+        "additionalProperties": false
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "priority": { "type": "string", "enum": ["low", "normal", "high"] },
+          "ttl_seconds": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["priority", "ttl_seconds"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["context_id", "timestamp", "source_agent_id", "context_type", "schema_version", "payload", "metadata"],
+    "additionalProperties": false
+  }

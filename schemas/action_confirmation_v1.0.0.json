@@ -1,0 +1,36 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Action Confirmation",
+    "description": "Schema for confirming a simulated action taken based on an AI decision.",
+    "type": "object",
+    "properties": {
+      "confirmation_id": { "type": "string", "description": "Unique ID for this confirmation instance" },
+      "timestamp": { "type": "string", "format": "date-time", "description": "Time of action confirmation" },
+      "source_agent_id": { "type": "string", "description": "ID of the agent confirming the action" },
+      "confirmation_type": { "type": "string", "enum": ["action_confirmation"], "description": "Type of confirmation" },
+      "schema_version": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$", "description": "Semantic version of the confirmation schema" },
+      "payload": {
+        "type": "object",
+        "properties": {
+          "machine_id": { "type": "string" },
+          "decision_id": { "type": "string", "description": "ID of the decision that triggered this action" },
+          "action_taken": { "type": "string", "description": "Description of the action taken (e.g., 'maintenance_initiated', 'no_action_taken')" },
+          "status": { "type": "string", "enum": ["success", "failed", "partially_successful"], "description": "Status of the simulated action" },
+          "details": { "type": "string", "description": "Additional details about the action" }
+        },
+        "required": ["machine_id", "decision_id", "action_taken", "status"],
+        "additionalProperties": false
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "priority": { "type": "string", "enum": ["low", "normal", "high"] },
+          "ttl_seconds": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["priority", "ttl_seconds"],
+        "additionalProperties": false
+      }
+    },
+    "required": ["confirmation_id", "timestamp", "source_agent_id", "confirmation_type", "schema_version", "payload", "metadata"],
+    "additionalProperties": false
+  }

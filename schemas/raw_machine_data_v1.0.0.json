@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Raw Machine Data",
+    "description": "Schema for raw sensor data from a simulated machine.",
+    "type": "object",
+    "properties": {
+      "machine_id": { "type": "string" },
+      "timestamp": { "type": "string", "format": "date-time" },
+      "temperature_c": { "type": "number", "minimum": 0, "maximum": 100 },
+      "vibration_g": { "type": "number", "minimum": 0, "maximum": 5 },
+      "power_kw": { "type": "number", "minimum": 0, "maximum": 50 },
+      "status": { "type": "string", "enum": ["running", "idle", "error"] }
+    },
+    "required": ["machine_id", "timestamp", "temperature_c", "vibration_g", "power_kw", "status"],
+    "additionalProperties": false
+  }

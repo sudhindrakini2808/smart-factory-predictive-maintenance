@@ -17,9 +17,9 @@ Make sure you have the following installed:
 
 The predictive maintenance agent uses a pre-trained model. If you wish to retrain the model with new data, you can run the training script.
 
-1.  **Navigate to the agent's directory:**
+1.  **Navigate to the root directory:**
     ```sh
-    cd predictive_maintenance_agent
+    cd .
     ```
 
 2.  **Run the training script:**

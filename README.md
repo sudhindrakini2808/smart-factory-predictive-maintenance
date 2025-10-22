@@ -57,3 +57,84 @@ The predictive maintenance agent uses a pre-trained model. If you wish to retrai
     ```sh
     docker-compose down
     ```
+
+## System Architecture and Flow
+
+### Architecture Diagram
+
+This diagram shows the high-level architecture of the system. It's a microservices-based system where each component is a Docker container, communicating via an MQTT Broker.
+
+```mermaid
+graph TD
+    subgraph "Offline Process"
+        Training[train_model.py] -- "Generates" --> Model[model.pkl]
+    end
+
+    subgraph "Runtime System (Docker Containers)"
+        subgraph "Communication Bus"
+            MQTT[MQTT Broker]
+        end
+
+        DataGen[Data Generator] -- "1. Raw Sensor Data" --> MQTT
+        MQTT -- "1. Raw Sensor Data" --> ContextProc[Context Processor]
+        ContextProc -- "2. Processed Context" --> MQTT
+
+        MQTT -- "2. Processed Context" --> PredAgent[Predictive Maintenance Agent]
+        MQTT -- "2. Processed Context" --> PerfMon[Performance Monitor]
+
+        PredAgent -- "Loads" --> Model
+        PredAgent -- "3. Maintenance Decision" --> MQTT
+
+        MQTT -- "3. Maintenance Decision" --> ActionExec[Action Executor]
+        ActionExec -- "4. Action Confirmation" --> MQTT
+
+        MQTT -- "4. Action Confirmation" --> PerfMon
+
+        PredAgent -- "Agent Heartbeat" --> MQTT
+        ActionExec -- "Agent Heartbeat" --> MQTT
+        ContextProc -- "Agent Heartbeat" --> MQTT
+        MQTT -- "Agent Heartbeats" --> PerfMon
+    end
+
+    style PredAgent fill:#f9f,stroke:#333,stroke-width:2px
+    style PerfMon fill:#ccf,stroke:#333,stroke-width:2px
+```
+
+### Interaction Diagram (Sequence)
+
+This sequence diagram illustrates the step-by-step flow of messages for a single predictive maintenance event.
+
+```mermaid
+sequenceDiagram
+    participant DG as Data Generator
+    participant CP as Context Processor
+    participant PA as Predictive Maint. Agent
+    participant AE as Action Executor
+    participant PM as Performance Monitor
+    participant MQTT as MQTT Broker
+
+    loop Data Generation
+        DG->>+MQTT: Publish(topic: 'raw_data/machine_123', payload: {...})
+        MQTT->>CP: Notify(topic: 'raw_data/machine_123')
+        MQTT->>-DG: (ack)
+    end
+
+    CP->>+MQTT: Publish(topic: 'context/machine_status/123', payload: {processed_data})
+    MQTT->>PA: Notify(topic: 'context/machine_status/123')
+    MQTT->>PM: Notify(topic: 'context/machine_status/123')
+    MQTT->>-CP: (ack)
+
+    Note over PA: AI model predicts failure risk.
+
+    alt High Failure Risk
+        PA->>+MQTT: Publish(topic: 'decisions/maintenance/123', payload: {decision})
+        MQTT->>AE: Notify(topic: 'decisions/maintenance/123')
+        MQTT->>-PA: (ack)
+    end
+
+    AE->>+MQTT: Publish(topic: 'simulated_actions/confirmation/123', payload: {confirmation})
+    MQTT->>PM: Notify(topic: 'simulated_actions/confirmation/123')
+    MQTT->>-AE: (ack)
+
+    Note over PM: Logs context and action confirmation for analysis.
+```
